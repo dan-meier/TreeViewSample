@@ -1,0 +1,133 @@
+﻿<Page
+    x:Class="TreeViewSample.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:TreeViewSample.Models"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+
+    <!--A splitview control to separate the treeview from the "order" content-->
+    <SplitView IsPaneOpen="True"
+               DisplayMode="Inline"
+               Margin="100"
+               OpenPaneLength="296">
+
+
+        <!--The splitview pane containing the treeview control-->
+        <SplitView.Pane>
+
+            <StackPanel
+                Orientation="Vertical"
+                Spacing="10">
+
+                <!--A textblock containing text describing the treeview contents-->
+                <TextBlock
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Text="What would you like?"/>
+
+                <!--The treeview control-->
+                <muxc:TreeView Name="DessertTree"
+                               ItemInvoked="DessertTree_OnItemInvoked"
+                               ItemsSource="{x:Bind DataSource}"
+                               SelectionMode="Multiple"
+                               Tapped="DessertTree_OnTapped">
+
+                    <muxc:TreeView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Item">
+
+                            <muxc:TreeViewItem
+                                Content="{x:Bind Name}"
+                                ItemsSource="{x:Bind Children}"/>
+
+                        </DataTemplate>
+                    </muxc:TreeView.ItemTemplate>
+                </muxc:TreeView>
+
+            </StackPanel>
+
+        </SplitView.Pane>
+
+
+
+
+        <!--Stack panel organizing field to display what's been selected-->
+        <StackPanel Margin="20,0,0,0"
+                    Spacing="20">
+
+            <StackPanel Orientation="Horizontal">
+
+                <StackPanel Spacing="20">
+
+                    <!--Programmatic selection of a specific node-->
+                    <Button Click="SelectNodeButton_OnClick"
+                            Content="Select Node"/>
+
+                    <!--Programmatic UNselection of a specific node-->
+                    <Button Click="UnSelectNodeButton_OnClick"
+                            Content="UNSelect Node"/>
+                
+                </StackPanel>
+
+                <TextBox x:Name="NodeName"
+                         Margin="20,0,0,0"
+                         PlaceholderText="Enter node name"
+                         VerticalAlignment="Center"
+                         Width="200"/>
+
+            </StackPanel>
+
+            <!--Button to select EVERYTHING!  NOTE: A fatal error occurs when tapping this button!-->
+            <Button Click="SelectAllNodesButton_Click"
+                    Content="Select all"/>
+
+            <!--A stack containing the list of ice cream flavors-->
+            <StackPanel Orientation="Horizontal">
+
+                <TextBlock Text="Selected flavors:"/>
+
+                <TextBlock x:Name="FlavorList" Margin="10,0,0,0"/>
+
+            </StackPanel>
+
+            <!--A stack containing the list of toppings-->
+            <StackPanel Orientation="Horizontal">
+
+                <TextBlock Text="Selected toppings:"/>
+
+                <TextBlock x:Name="ToppingsList" Margin="10,0,0,0"/>
+
+            </StackPanel>
+
+
+
+            <!--A stack containing items that were added with the previous tap-->
+            <StackPanel
+                Margin="0,30,0,0"
+                Orientation="Horizontal">
+
+                <TextBlock Text="Items added:"/>
+
+                <TextBlock x:Name="AddedNodes" Margin="10,0,0,0"/>
+
+            </StackPanel>
+
+            <!--A stack containing items that were deleted with the previous tap-->
+            <StackPanel
+                Orientation="Horizontal">
+
+                <TextBlock Text="Items deleted:"/>
+
+                <TextBlock x:Name="DeletedNodes" Margin="10,0,0,0"/>
+
+            </StackPanel>
+
+        </StackPanel>
+
+    </SplitView>
+
+</Page>
