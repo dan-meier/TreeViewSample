@@ -5,7 +5,7 @@ namespace TreeViewSample.Models
     public class Item
     {
         // Properties
-        public string                     Name     { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public ObservableCollection<Item> Children { get; set; } = new ObservableCollection<Item>();
 
