@@ -62,7 +62,7 @@ namespace TreeViewSample
 
             // If a node item is tapped, grab its name
             string nodeName = (((TextBlock)e.OriginalSource).DataContext is Item)
-                            ? nodeName = ((Item)((TextBlock)e.OriginalSource).DataContext).Name
+                            ? ((Item)((TextBlock)e.OriginalSource).DataContext).Name
                             : string.Empty;
 
 
