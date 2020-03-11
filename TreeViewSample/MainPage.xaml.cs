@@ -48,7 +48,7 @@ namespace TreeViewSample
 
         /// <summary>
         /// The treeview control has NO "NodeSelected" event that fires as a node is checked or unchecked.
-        /// However, the Tapped event can be co-opted to simulate a tapped event.
+        /// However, the Tapped event can be co-opted to simulate a NodeSelected event.
         /// </summary>
         /// <remarks>
         /// Note that the Tapped event fires AFTER the ItemInvoked event.
