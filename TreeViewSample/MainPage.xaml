@@ -31,11 +31,14 @@
                     Text="What would you like?"/>
 
                 <!--The treeview control-->
-                <muxc:TreeView Name="DessertTree"
-                               ItemInvoked="DessertTree_OnItemInvoked"
-                               ItemsSource="{x:Bind DataSource}"
-                               SelectionMode="Multiple"
-                               Tapped="DessertTree_OnTapped">
+                <muxc:TreeView
+                    Name="DessertTree"
+                    MaxHeight="350"
+                    MinHeight="100"
+                    ItemInvoked="DessertTree_OnItemInvoked"
+                    ItemsSource="{x:Bind DataSource}"
+                    SelectionMode="Multiple"
+                    Tapped="DessertTree_OnTapped">
 
                     <muxc:TreeView.ItemTemplate>
                         <DataTemplate x:DataType="models:Item">
@@ -47,6 +50,65 @@
                         </DataTemplate>
                     </muxc:TreeView.ItemTemplate>
                 </muxc:TreeView>
+
+
+
+                <!--Buttons to expand, collapse, select and deselect all treeview nodes-->
+                <Grid
+                    Padding="12,0,12,0"
+                    RowSpacing="5">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.Resources>
+                        <Style x:Name="TreeViewButtonStyle"  TargetType="Button">
+                            <Setter Property="FontSize" Value="10"/>
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Width" Value="75"/>
+                        </Style>
+                    </Grid.Resources>
+
+                    <!--Button to expand ALL treeview nodes-->
+                    <Button
+                        Click="ExpandAllNodesButton_OnClick"
+                        Content="Expand All"
+                        Grid.Column="0"
+                        Grid.Row="0"
+                        Style="{StaticResource TreeViewButtonStyle}"/>
+
+                    <!--Button to collapse ALL treeview nodes-->
+                    <Button
+                        Click="CollapseAllNodesButton_OnClick"
+                        Content="Collapse All"
+                        Grid.Column="0"
+                        Grid.Row="1"
+                        Style="{StaticResource TreeViewButtonStyle}"/>
+
+                    <!--Button to select EVERYTHING!-->
+                    <Button
+                        Click="SelectAllNodesButton_OnClick"
+                        Content="Select All"
+                        Grid.Column="1"
+                        Grid.Row="0"
+                        Style="{StaticResource TreeViewButtonStyle}"/>
+                    
+                    <!--Button to de-select EVERYTHING!-->
+                    <Button
+                        Click="DeselectAllNodesButton_OnClick"
+                        Content="Deselect All"
+                        Grid.Column="1"
+                        Grid.Row="1"
+                        Style="{StaticResource TreeViewButtonStyle}"/>
+
+                </Grid>
 
             </StackPanel>
 
@@ -67,9 +129,9 @@
                     <Button Click="SelectNodeButton_OnClick"
                             Content="Select Node"/>
 
-                    <!--Programmatic UNselection of a specific node-->
-                    <Button Click="UnSelectNodeButton_OnClick"
-                            Content="UNSelect Node"/>
+                    <!--Programmatic deselection of a specific node-->
+                    <Button Click="DeselectNodeButton_OnClick"
+                            Content="Deselect Node"/>
                 
                 </StackPanel>
 
@@ -81,12 +143,11 @@
 
             </StackPanel>
 
-            <!--Button to select EVERYTHING!  NOTE: A fatal error occurs when tapping this button!-->
-            <Button Click="SelectAllNodesButton_Click"
-                    Content="Select all"/>
 
             <!--A stack containing the list of ice cream flavors-->
-            <StackPanel Orientation="Horizontal">
+            <StackPanel
+                Margin="0,35,0,0"
+                Orientation="Horizontal">
 
                 <TextBlock Text="Selected flavors:"/>
 

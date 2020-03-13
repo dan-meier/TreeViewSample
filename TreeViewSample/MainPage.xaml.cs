@@ -7,14 +7,18 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
-using muxc = Microsoft.UI.Xaml.Controls;
+using TreeView                     = Microsoft.UI.Xaml.Controls.TreeView;
+using TreeViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs;
+using TreeViewNode                 = Microsoft.UI.Xaml.Controls.TreeViewNode;
+using TreeViewSelectionMode        = Microsoft.UI.Xaml.Controls.TreeViewSelectionMode;
 
 namespace TreeViewSample
 {
     public sealed partial class MainPage : Page
     {
-        private List<Item> DataSource    = new List<Item>();
-        private List<Item> SelectedNodes = new List<Item>();
+        private bool _expandAllExecutedBefore = false;
+        private List<Item> DataSource         = new List<Item>();
+        private List<Item> SelectedNodes      = new List<Item>();
 
         private enum SelectionMode
         {
@@ -45,6 +49,34 @@ namespace TreeViewSample
 
         // Private methods
 
+        /// <summary>
+        /// Private method to do the work of collapsing all treeview nodes, finally showing only the top-level nodes.
+        /// </summary>
+        private void CollapseAllNodes( IList<TreeViewNode> treeViewNodeList )
+        {
+            // Loop through the list of nodes
+            foreach (TreeViewNode node in treeViewNodeList)
+            {
+                // Search the children if the node has any
+                if (node.HasChildren)
+                {
+                    CollapseAllNodes( node.Children );
+                }
+
+                // Collapse the node
+                node.IsExpanded = false;
+            }
+        }
+
+
+        /// <summary>
+        /// Private method to do the work of UNselecting all treeview nodes.
+        /// </summary>
+        private void DeselectAllNodes( TreeView treeView )
+        {
+            treeView.SelectedNodes.Clear();
+        }
+
 
         /// <summary>
         /// The treeview control has NO "NodeSelected" event that fires as a node is checked or unchecked.
@@ -53,7 +85,7 @@ namespace TreeViewSample
         /// <remarks>
         /// Note that the Tapped event fires AFTER the ItemInvoked event.
         /// </remarks>
-        private async void DessertTree_OnTapped( object sender, TappedRoutedEventArgs e )
+        private void DessertTree_OnTapped( object sender, TappedRoutedEventArgs e )
         {
             // If the node's TEXT is tapped, ignore it...we'll let the Tapped even handle it
             if (! (e.OriginalSource is TextBlock))                     return;
@@ -69,7 +101,7 @@ namespace TreeViewSample
             // Loop through the treeview's SelectedNodes list. If the tapped node is
             // in the list, it was checked. If it's NOT in the list, it was UNchecked.
             bool foundIt = false;
-            foreach (muxc.TreeViewNode node in DessertTree.SelectedNodes)
+            foreach (TreeViewNode node in DessertTree.SelectedNodes)
             {
                 // If this node isn't the one we're looking for, continue the loop
                 if (((Item)node?.Content)?.Name != nodeName) continue;
@@ -95,6 +127,74 @@ namespace TreeViewSample
 
             // Update the master SelectedNodes list as well as the added/deleted items lists
             UpdateSelectedNodeLists();
+        }
+
+
+        /// <summary>
+        /// Private method to expand all treeview nodes.
+        /// </summary>
+        private void ExpandAllNodes( IList<TreeViewNode> treeViewNodeList )
+        {
+            // Invoke the recursive method to expand all treeview nodes
+            ExpandAllNodesRecursive( treeViewNodeList );
+
+
+            // Indicate that this method has been executed.
+            // (See the ExpandAllNodesRecursive method for more information.)
+            _expandAllExecutedBefore = false;
+        }
+
+
+        /// <summary>
+        /// Recursive method to do the work of expanding all treeview nodes, finally showing all nodes in the treeview.
+        /// </summary>
+        private async void ExpandAllNodesRecursive( IList<TreeViewNode> treeViewNodeList )
+        {
+            // Note that if the treeview is more than a couple of nodes deep, the FIRST time
+            // we attempt to expand all nodes by traversing the nodes recursively leads to a
+            // timing problem such that not all nodes show as expanded even though we've
+            // explicitly expanded all parent nodes. Performing the traversal twice separated
+            // by a Tack.Delay(50) the FIRST time seems to largely remediate the problem.
+
+
+            // Loop through the list of nodes
+            foreach (TreeViewNode node in treeViewNodeList)
+            {
+                // Search the children if the node has any
+                if (node.HasChildren)
+                {
+                    // Expand the node
+                    node.IsExpanded = true;
+
+                    // Expand the children's nodes
+                    ExpandAllNodesRecursive(node.Children);
+                }
+            }
+
+
+            // If we've expanded all nodes before this, exit here (see note at top of this method)
+            if (_expandAllExecutedBefore) return;
+
+
+
+            // Wait a moment...then do it again (see note at top of this method)
+            await Task.Delay(50);
+
+
+
+            // Loop through the list of nodes
+            foreach (TreeViewNode node in treeViewNodeList)
+            {
+                // Search the children if the node has any
+                if (node.HasChildren)
+                {
+                    // Expand the node
+                    node.IsExpanded = true;
+
+                    // Expand the children's nodes
+                    ExpandAllNodesRecursive(node.Children);
+                }
+            }
         }
 
 
@@ -126,8 +226,8 @@ namespace TreeViewSample
                                                 Name = "Candy",
                                                 Children =
                                                 {
-                                                    new Item() { Name = "Chocolate" },
-                                                    new Item() { Name = "Mint" },
+                                                    new Item() { Name = "Chocolate Chips" },
+                                                    new Item() { Name = "Mint Chips" },
                                                     new Item() { Name = "Sprinkles" }
                                                 }
                                             },
@@ -196,9 +296,9 @@ namespace TreeViewSample
         /// See the TreeView documentation section titled, "Selection and Realized/Unrealized Nodes".
         /// https://docs.microsoft.com/en-us/windows/uwp/design/controls-and-patterns/tree-view#selection-and-realizedunrealized-nodes
         /// </remarks>
-        private async void RealizeTreeViewNodes( IList<muxc.TreeViewNode> treeViewNodeList )
+        private async void RealizeTreeViewNodes( IList<TreeViewNode> treeViewNodeList )
         {
-            foreach (muxc.TreeViewNode node in treeViewNodeList)
+            foreach (TreeViewNode node in treeViewNodeList)
             {
                 if (node.HasChildren)
                 {
@@ -213,11 +313,25 @@ namespace TreeViewSample
 
 
         /// <summary>
+        /// Private method to do the work of selecting all treeview nodes.
+        /// </summary>
+        private void SelectAllNodes( TreeView treeView )
+        {
+            // Loop through the list of nodes
+            foreach (TreeViewNode node in treeView.RootNodes)
+            {
+                // With a "multi-select" treeview, selecting the top-level nodes selects ALL nodes beneath them
+                treeView.SelectedNodes.Add( node );
+            }
+        }
+
+
+        /// <summary>
         /// A recursive method to search for a specific node name within the treeview and if found, select it.
         /// </summary>
-        private bool SelectNode( IList<muxc.TreeViewNode> treeViewNodeList, string nodeName, SelectionMode mode )
+        private bool SelectNode( IList<TreeViewNode> treeViewNodeList, string nodeName, SelectionMode mode )
         {
-            foreach (muxc.TreeViewNode node in treeViewNodeList)
+            foreach (TreeViewNode node in treeViewNodeList)
             {
                 // Search the children if the node has any
                 if (node.HasChildren)
@@ -254,7 +368,7 @@ namespace TreeViewSample
 
             // Loop through the selected nodes to get the list of selected Ice Cream Flavors --
             // we're ONLY looking for "leaf" nodes whose parent is the "Ice Cream Flavors" node
-            foreach (muxc.TreeViewNode node in DessertTree.SelectedNodes)
+            foreach (TreeViewNode node in DessertTree.SelectedNodes)
             {
                 // If the node's parent is NOT the flavors node, it's a topping not a flavor...continue looping
                 if (node.Parent.Content?.ToString() != "Ice Cream Flavors") continue;
@@ -265,7 +379,7 @@ namespace TreeViewSample
 
 
             //  Loop through the selected nodes to get the list of selected Toppings -- we're ONLY looking for "leaf" nodes
-            foreach (muxc.TreeViewNode node in DessertTree.SelectedNodes)
+            foreach (TreeViewNode node in DessertTree.SelectedNodes)
             {
                 // If the node has children, it's not a "leaf" node...continue looping
                 if (node.HasChildren) continue;
@@ -312,6 +426,27 @@ namespace TreeViewSample
         // Events
 
         /// <summary>
+        /// Event that fires when the "Collapse All" button is clicked.
+        /// </summary>
+        private void CollapseAllNodesButton_OnClick( object sender, RoutedEventArgs e )
+        {
+            CollapseAllNodes( DessertTree.RootNodes );
+        }
+
+
+        /// <summary>
+        /// Button click event that fires when the user wants to "UNcheck" all treeview nodes.
+        /// </summary>
+        private void DeselectAllNodesButton_OnClick( object sender, RoutedEventArgs e )
+        {
+            DeselectAllNodes( DessertTree );
+
+            // Update the selected nodes lists
+            UpdateSelectedNodeLists();
+        }
+
+
+        /// <summary>
         /// The ItemInvoked event is ONLY fired when a treeview node's TEXT is tapped.
         /// It is NOT fired when the node's checkbox is checked or unchecked.
         /// It is NOT fired when the expander "handles" are tapped to expand or collapse a node's children.
@@ -319,7 +454,7 @@ namespace TreeViewSample
         /// <remarks>
         /// Note that the ItemInvoked event fires BEFORE the Tapped event.
         /// </remarks>
-        private async void DessertTree_OnItemInvoked( muxc.TreeView sender, muxc.TreeViewItemInvokedEventArgs e )
+        private async void DessertTree_OnItemInvoked( TreeView sender, TreeViewItemInvokedEventArgs e )
         {
             ContentDialog treeViewItemInvoked = new ContentDialog()
                                                 {
@@ -333,11 +468,20 @@ namespace TreeViewSample
 
 
         /// <summary>
+        /// Event that fires when the "Expand All" button is clicked.
+        /// </summary>
+        private void ExpandAllNodesButton_OnClick( object sender, RoutedEventArgs e )
+        {
+            ExpandAllNodes( DessertTree.RootNodes );
+        }
+
+
+        /// <summary>
         /// Button click event that fires when the user wants to "check" all treeview nodes.
         /// </summary>
-        private void SelectAllNodesButton_Click(object sender, RoutedEventArgs e)
+        private void SelectAllNodesButton_OnClick(object sender, RoutedEventArgs e)
         {
-            if (DessertTree.SelectionMode == muxc.TreeViewSelectionMode.Multiple)
+            if (DessertTree.SelectionMode == TreeViewSelectionMode.Multiple)
             {
 // BUG: Problem area begins here!
 // The TreeView.SelectAll method consistently generates a fatal exception:
@@ -345,10 +489,16 @@ namespace TreeViewSample
 #region PROBLEM AREA
 
                 // "Check" all nodes in the treeview
-                DessertTree.SelectAll();
+//              DessertTree.SelectAll();
+                // Note that there is no corresponding UNselectAll method.
 
 #endregion
-                // Note that there is no corresponding UNselectAll method.
+
+                // Method to select all nodes
+                SelectAllNodes( DessertTree );
+
+                // Update the selected nodes lists
+                UpdateSelectedNodeLists();
             }
         }
 
@@ -371,9 +521,9 @@ namespace TreeViewSample
 
 
         /// <summary>
-        /// Event that fires when the "UnSelect Node" button is clicked.
+        /// Event that fires when the "Deselect Node" button is clicked.
         /// </summary>
-        private void UnSelectNodeButton_OnClick( object sender, RoutedEventArgs e )
+        private void DeselectNodeButton_OnClick( object sender, RoutedEventArgs e )
         {
             // If nothing in the node name textbox, exit immediately
             if (string.IsNullOrWhiteSpace( NodeName.Text )) return;
